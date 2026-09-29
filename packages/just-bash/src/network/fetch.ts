@@ -591,19 +591,9 @@ export function createSecureFetch(config: NetworkConfig): SecureFetch {
             currentBody = undefined;
           }
 
-          // The hop is a new request, so it must satisfy the target's method
-          // policy. A rewritten method is checked as the method that is sent.
-          try {
-            checkMethodAllowed(currentMethod, getEffectiveMethods(redirectUrl));
-          } catch (error) {
-            if (combinedAbort.signal?.aborted) {
-              throw abortReason(combinedAbort.signal);
-            }
-            if (error instanceof MethodNotAllowedError) {
-              throw new RedirectNotAllowedError(redirectUrl);
-            }
-            throw error;
-          }
+          // The hop is a new request, so the method it will send must satisfy
+          // the target's own policy, including any per-entry `methods`.
+          checkMethodAllowed(currentMethod, getEffectiveMethods(redirectUrl));
 
           // Do not forward user credentials across origins.
           if (new URL(redirectUrl).origin !== new URL(currentUrl).origin) {

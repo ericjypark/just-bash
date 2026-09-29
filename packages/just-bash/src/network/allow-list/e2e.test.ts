@@ -553,7 +553,7 @@ function runAllowListTests(name: string, createAdapter: AdapterFactory) {
           network: {
             allowedUrlPrefixes: [
               {
-                url: "https://api.example.com/redirect-to-allowed",
+                url: "https://api.example.com/redirect-307-to-allowed",
                 methods: ["GET", "POST"],
               },
               { url: "https://api.example.com/data", methods: ["GET"] },
@@ -561,22 +561,23 @@ function runAllowListTests(name: string, createAdapter: AdapterFactory) {
           },
         });
 
-        // GET follows redirect and succeeds — both entries allow GET
+        // GET survives the 307 and both entries allow it.
         const r1 = await env.exec(
-          "curl https://api.example.com/redirect-to-allowed",
+          "curl https://api.example.com/redirect-307-to-allowed",
         );
         expect(r1.exitCode).toBe(0);
         expect(r1.stdout).toBe(MOCK_SUCCESS_BODY);
         expect(r1.stderr).toBe("");
 
-        // POST is allowed on the source but not on the redirect target
+        // POST is allowed on the source but not on the target. A 307 preserves
+        // the method, so the hop is checked as POST rather than rewritten GET.
         const r2 = await env.exec(
-          "curl -X POST https://api.example.com/redirect-to-allowed",
+          "curl -X POST https://api.example.com/redirect-307-to-allowed",
         );
-        expect(r2.exitCode).toBe(47);
+        expect(r2.exitCode).toBe(3);
         expect(r2.stdout).toBe("");
         expect(r2.stderr).toBe(
-          "curl: (47) Redirect target not in allow-list: https://api.example.com/data\n",
+          "curl: (3) HTTP method 'POST' not allowed. Allowed methods: GET\n",
         );
       });
     });
