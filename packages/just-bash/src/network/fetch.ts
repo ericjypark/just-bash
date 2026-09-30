@@ -324,7 +324,9 @@ export function createSecureFetch(config: NetworkConfig): SecureFetch {
 
   /**
    * Returns the methods a URL may use. A matching allow-list entry with its
-   * own `methods` narrows the global list for that prefix.
+   * own `methods` overrides the global list for that prefix, so it can widen
+   * the policy as well as narrow it. An empty array denies every method. The
+   * selected entry never inherits methods from another matching entry.
    */
   function getEffectiveMethods(url: string): HttpMethod[] {
     const entry = findMatchingEntry(url, entries);

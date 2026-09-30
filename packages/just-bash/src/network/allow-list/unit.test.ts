@@ -519,6 +519,47 @@ describe("findMatchingEntry", () => {
     ]);
     expect(result).toBeUndefined();
   });
+
+  it("prefers the most specific prefix regardless of declaration order", () => {
+    expect(
+      findMatchingEntry("https://api.example.com/data", [
+        { url: "https://api.example.com", methods: ["GET", "POST"] },
+        { url: "https://api.example.com/data", methods: ["GET"] },
+      ]),
+    ).toEqual({ url: "https://api.example.com/data", methods: ["GET"] });
+
+    expect(
+      findMatchingEntry("https://api.example.com/data", [
+        { url: "https://api.example.com/data", methods: ["GET"] },
+        { url: "https://api.example.com", methods: ["GET", "POST"] },
+      ]),
+    ).toEqual({ url: "https://api.example.com/data", methods: ["GET"] });
+  });
+
+  it("keeps declaration order when prefixes are equally specific", () => {
+    expect(
+      findMatchingEntry("https://api.example.com/data", [
+        { url: "https://api.example.com/data", methods: ["GET"] },
+        { url: "https://api.example.com/data", methods: ["POST"] },
+      ]),
+    ).toEqual({ url: "https://api.example.com/data", methods: ["GET"] });
+
+    expect(
+      findMatchingEntry("https://api.example.com/data", [
+        { url: "https://api.example.com/data", methods: ["POST"] },
+        { url: "https://api.example.com/data", methods: ["GET"] },
+      ]),
+    ).toEqual({ url: "https://api.example.com/data", methods: ["POST"] });
+  });
+
+  it("ignores query strings and fragments when selecting", () => {
+    expect(
+      findMatchingEntry("https://api.example.com/data?x=1#frag", [
+        { url: "https://api.example.com", methods: ["GET", "POST"] },
+        { url: "https://api.example.com/data", methods: ["GET"] },
+      ]),
+    ).toEqual({ url: "https://api.example.com/data", methods: ["GET"] });
+  });
 });
 
 describe("security scenarios", () => {
