@@ -398,9 +398,9 @@ describe("secureFetch behavior", () => {
       [broad, narrow],
       [narrow, broad],
     ]) {
-      const requestedUrls: string[] = [];
-      globalThis.fetch = mockFetch((u) => {
-        requestedUrls.push(u);
+      const requested: Array<{ url: string; method: string }> = [];
+      globalThis.fetch = mockFetch((u, init) => {
+        requested.push({ url: u, method: init.method ?? "GET" });
         if (u === "https://example.com/start") {
           return new Response("", {
             status: 307,
@@ -422,8 +422,11 @@ describe("secureFetch behavior", () => {
         }),
       ).rejects.toThrow("HTTP method 'POST' not allowed. Allowed methods: GET");
 
-      // The source received the POST; the stricter target was never requested.
-      expect(requestedUrls).toEqual(["https://example.com/start"]);
+      // The source received the POST, and the stricter target was never
+      // requested at all.
+      expect(requested).toEqual([
+        { url: "https://example.com/start", method: "POST" },
+      ]);
     }
   });
 

@@ -560,6 +560,14 @@ describe("findMatchingEntry", () => {
       ]),
     ).toEqual({ url: "https://api.example.com/data", methods: ["GET"] });
   });
+
+  it("cannot gain specificity from a query string or fragment in an entry", () => {
+    const errors = validateAllowList([
+      { url: "https://api.example.com/data?x=1", methods: ["GET"] },
+    ]);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("Query strings and fragments");
+  });
 });
 
 describe("security scenarios", () => {
